@@ -16,7 +16,22 @@ env:
   PackageVersion: ${{ github.event.inputs.releaseVersion }}
 
 jobs:
+
+  verify:
+    name: Run tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Test
+      run: dotnet test --verbosity normal
+
   release_docker_image:
+    needs: verify
     name: Release Docker image to Docker Hub
     runs-on: ubuntu-latest
 
