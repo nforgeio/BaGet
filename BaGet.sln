@@ -55,6 +55,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BaGetWebApplication", "samp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BaGet.Web.Tests", "tests\BaGet.Web.Tests\BaGet.Web.Tests.csproj", "{BEEAAA73-36CD-4178-9C9F-6D036586E7BF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{7CC796C6-A709-43FD-B3CC-7180A4604A59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{E8FC1148-F2AE-4CF0-8BF2-C172A3CB2B44}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\main.yml = .github\workflows\main.yml
+		.github\workflows\release.yml = .github\workflows\release.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -156,6 +164,7 @@ Global
 		{9F7C4F38-D598-42D9-A9F8-962490483B18} = {26A0B557-53FB-4B9A-94C4-BCCF1BDCB0CC}
 		{E5AFE55D-0932-46A9-BFA3-C8A034037377} = {DDEC0736-8169-4834-815E-B78E7CE612A4}
 		{BEEAAA73-36CD-4178-9C9F-6D036586E7BF} = {C237857D-AD8E-4C52-974F-6A8155BB0C18}
+		{E8FC1148-F2AE-4CF0-8BF2-C172A3CB2B44} = {7CC796C6-A709-43FD-B3CC-7180A4604A59}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1423C027-2C90-417F-8629-2A4CF107C055}
