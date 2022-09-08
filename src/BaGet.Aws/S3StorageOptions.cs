@@ -28,6 +28,6 @@ namespace BaGet.Aws
 
         public bool UseHttp { get; set; }
 
-        public int Timeout { get; set; } = 120;
+        public int Timeout { get; set; } = 300;
     }
 }
