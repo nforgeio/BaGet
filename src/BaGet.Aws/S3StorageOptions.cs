@@ -27,5 +27,7 @@ namespace BaGet.Aws
         public string ServiceUrl { get; set; }
 
         public bool UseHttp { get; set; }
+
+        public int Timeout { get; set; } = 120;
     }
 }

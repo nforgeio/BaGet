@@ -42,9 +42,10 @@ namespace BaGet
                     RegionEndpoint = (options.Region != null)
                             ? RegionEndpoint.GetBySystemName(options.Region)
                             : null,
-                    ServiceURL     = options.ServiceUrl,
-                    ForcePathStyle = options.ForcePathStyle,
-                    UseHttp        = options.UseHttp
+                    ServiceURL       = options.ServiceUrl,
+                    ForcePathStyle   = options.ForcePathStyle,
+                    UseHttp          = options.UseHttp,
+                    Timeout          = TimeSpan.FromSeconds(options.Timeout)
                 };
 
                 if (options.UseInstanceProfile)
