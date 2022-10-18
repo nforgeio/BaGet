@@ -11,6 +11,7 @@
     <PackageReference Include="AWSSDK.S3" Version="3.7.9.39" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.7.1.185" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="$(MicrosoftExtensionsPackageVersion)" />
+    <PackageReference Include="Neon.Common" Version="2.19.0" />
   </ItemGroup>
 
   <ItemGroup>

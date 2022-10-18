@@ -1,11 +1,16 @@
 using System;
 using System.IO;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime.Internal;
 using Amazon.S3;
 using Amazon.S3.Model;
 using BaGet.Core;
 using Microsoft.Extensions.Options;
+
+using Neon.Common;
+using Neon.IO;
 
 namespace BaGet.Aws
 {
@@ -71,27 +76,37 @@ namespace BaGet.Aws
 
         public async Task<StoragePutResult> PutAsync(string path, Stream content, string contentType, CancellationToken cancellationToken = default)
         {
-            // TODO: Uploads should be idempotent. This should fail if and only if the blob
-            // already exists but has different content.
-
-            using (var seekableContent = new MemoryStream())
+            using (var tempFile = new TempFile())
             {
-                await content.CopyToAsync(seekableContent, 4096, cancellationToken);
-
-                seekableContent.Seek(0, SeekOrigin.Begin);
-
-                await _client.PutObjectAsync(new PutObjectRequest
+                using (var tempStream = System.IO.File.Create(tempFile.Name))
                 {
-                    BucketName = _bucket,
-                    Key = PrepareKey(path),
-                    InputStream = seekableContent,
-                    ContentType = contentType,
-                    AutoResetStreamPosition = false,
-                    AutoCloseStream = false
-                }, cancellationToken);
-            }
 
-            return StoragePutResult.Success;
+                    await content.CopyToAsync(tempStream, 4096, cancellationToken);
+
+                    tempStream.Seek(0, SeekOrigin.Begin);
+
+                    var metadata = new MetadataCollection();
+
+                    var request = new PutObjectRequest
+                    {
+                        BucketName = _bucket,
+                        Key = PrepareKey(path),
+                        InputStream = tempStream,
+                        ContentType = contentType,
+                        AutoResetStreamPosition = false,
+                        AutoCloseStream = false
+                    };
+
+                    var result = await _client.PutObjectAsync(request);
+
+                    if (result.HttpStatusCode != HttpStatusCode.OK)
+                    {
+                        throw new Exception(result.HttpStatusCode.ToString());
+                    }
+
+                    return StoragePutResult.Success;
+                }
+            }
         }
 
         public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
