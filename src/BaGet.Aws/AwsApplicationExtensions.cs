@@ -15,8 +15,8 @@ namespace BaGet
     {
         public static BaGetApplication AddAwsS3Storage(this BaGetApplication app)
         {
+            app.Services.AddLogging();
             app.Services.AddBaGetOptions<S3StorageOptions>(nameof(BaGetOptions.Storage));
-
             app.Services.AddTransient<S3StorageService>();
             app.Services.TryAddTransient<IStorageService>(provider => provider.GetRequiredService<S3StorageService>());
 
