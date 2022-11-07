@@ -9,6 +9,7 @@ using Amazon.Runtime.Internal;
 using Amazon.S3;
 using Amazon.S3.Model;
 using BaGet.Core;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using Neon.Common;
@@ -22,8 +23,12 @@ namespace BaGet.Aws
         private readonly string _bucket;
         private readonly string _prefix;
         private readonly AmazonS3Client _client;
+        private readonly ILogger _logger;
 
-        public S3StorageService(IOptionsSnapshot<S3StorageOptions> options, AmazonS3Client client)
+        public S3StorageService(
+            IOptionsSnapshot<S3StorageOptions> options,
+            AmazonS3Client client,
+            ILogger logger)
         {
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
@@ -31,6 +36,7 @@ namespace BaGet.Aws
             _bucket = options.Value.Bucket;
             _prefix = options.Value.Prefix;
             _client = client ?? throw new ArgumentNullException(nameof(client));
+            _logger = logger;
 
             if (!string.IsNullOrEmpty(_prefix) && !_prefix.EndsWith(Separator))
                 _prefix += Separator;
@@ -109,7 +115,7 @@ namespace BaGet.Aws
 
                     try
                     {
-                        Console.WriteLine("Uploading parts");
+                        _logger.LogInformation("Uploading parts");
 
                         long filePosition = 0;
                         for (var i = 1; filePosition < contentLength; i++)
@@ -151,7 +157,7 @@ namespace BaGet.Aws
                     }
                     catch (Exception exception)
                     {
-                        Console.WriteLine("An AmazonS3Exception was thrown: { 0}", exception.Message);
+                        _logger.LogError("An AmazonS3Exception was thrown: { 0}", exception.Message);
 
                         // Abort the upload.
                         var abortMPURequest = new AbortMultipartUploadRequest
@@ -191,10 +197,10 @@ namespace BaGet.Aws
             await _client.DeleteObjectAsync(_bucket, PrepareKey(path), cancellationToken);
         }
 
-        public static void UploadPartProgressEventCallback(object sender, StreamTransferProgressArgs e)
+        public void UploadPartProgressEventCallback(object sender, StreamTransferProgressArgs e)
         {
             // Process event. 
-            Console.WriteLine("{0}/{1}", e.TransferredBytes, e.TotalBytes);
+            _logger.LogInformation("{0}/{1}", e.TransferredBytes, e.TotalBytes);
         }
     }
 }
