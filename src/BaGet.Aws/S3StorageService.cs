@@ -115,7 +115,7 @@ namespace BaGet.Aws
 
                     try
                     {
-                        _logger.LogInformation("Uploading parts");
+                        _logger.LogDebug("Uploading parts");
 
                         long filePosition = 0;
                         for (var i = 1; filePosition < contentLength; i++)
@@ -200,7 +200,7 @@ namespace BaGet.Aws
         public void UploadPartProgressEventCallback(object sender, StreamTransferProgressArgs e)
         {
             // Process event. 
-            _logger.LogInformation("{0}/{1}", e.TransferredBytes, e.TotalBytes);
+            _logger.LogDebug("{0}/{1}", e.TransferredBytes, e.TotalBytes);
         }
     }
 }
