@@ -24,6 +24,8 @@ namespace BaGet
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
+
             // TODO: Ideally we'd use:
             //
             //       services.ConfigureOptions<ConfigureBaGetOptions>();
@@ -79,7 +81,8 @@ namespace BaGet
         {
             var options = Configuration.Get<BaGetOptions>();
 
-            if (env.IsDevelopment())
+            if (env.IsDevelopment() ||
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DEBUG")))
             {
                 app.UseDeveloperExceptionPage();
                 app.UseStatusCodePages();

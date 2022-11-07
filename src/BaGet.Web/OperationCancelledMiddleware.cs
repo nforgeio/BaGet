@@ -31,7 +31,7 @@ namespace BaGet.Web
             {
                 try
                 {
-                    _logger.LogWarning("Request cancelled");
+                    _logger.LogError(e, "Request cancelled");
 
                     context.Response.Clear();
                     context.Response.StatusCode = (int)HttpStatusCode.Conflict;
