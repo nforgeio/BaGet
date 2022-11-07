@@ -104,17 +104,17 @@ namespace BaGet.Aws
                         await _client.InitiateMultipartUploadAsync(initiateRequest);
 
                     // Upload parts.
-                    long contentLength = tempStream.Length;
-                    long partSize = 5 * (long)Math.Pow(2, 20); // 5 MB
+                    var contentLength = tempStream.Length;
+                    var partSize = 5 * (long)Math.Pow(2, 20); // 5 MB
 
                     try
                     {
                         Console.WriteLine("Uploading parts");
 
                         long filePosition = 0;
-                        for (int i = 1; filePosition < contentLength; i++)
+                        for (var i = 1; filePosition < contentLength; i++)
                         {
-                            UploadPartRequest uploadRequest = new UploadPartRequest
+                            var uploadRequest = new UploadPartRequest
                             {
                                 BucketName = _bucket,
                                 Key = key,
@@ -123,6 +123,10 @@ namespace BaGet.Aws
                                 PartSize = partSize,
                                 InputStream = tempStream
                             };
+
+                            // Track upload progress.
+                            uploadRequest.StreamTransferProgress +=
+                                new EventHandler<StreamTransferProgressArgs>(UploadPartProgressEventCallback);
 
                             // Upload a part and add the response to our list.
                             uploadResponses.Add(await _client.UploadPartAsync(uploadRequest));
@@ -158,7 +162,7 @@ namespace BaGet.Aws
                         };
                         await _client.AbortMultipartUploadAsync(abortMPURequest);
 
-                        throw exception;
+                        throw;
                     }
 
                     //var request = new PutObjectRequest
@@ -185,6 +189,12 @@ namespace BaGet.Aws
         public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
         {
             await _client.DeleteObjectAsync(_bucket, PrepareKey(path), cancellationToken);
+        }
+
+        public static void UploadPartProgressEventCallback(object sender, StreamTransferProgressArgs e)
+        {
+            // Process event. 
+            Console.WriteLine("{0}/{1}", e.TransferredBytes, e.TotalBytes);
         }
     }
 }
