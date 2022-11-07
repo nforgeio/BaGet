@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BaGet
@@ -24,8 +26,6 @@ namespace BaGet
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddLogging();
-
             // TODO: Ideally we'd use:
             //
             //       services.ConfigureOptions<ConfigureBaGetOptions>();
@@ -58,6 +58,11 @@ namespace BaGet
 
         private void ConfigureBaGetApplication(BaGetApplication app)
         {
+            var logFactory = new LoggerFactory();
+            var logger = logFactory.CreateLogger("BaGetApplication");
+
+            app.Services.TryAddSingleton(logger);
+
             // Add database providers.
             app.AddAzureTableDatabase();
             app.AddMySqlDatabase();

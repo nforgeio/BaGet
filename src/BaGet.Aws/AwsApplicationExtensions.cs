@@ -7,6 +7,7 @@ using BaGet.Aws;
 using BaGet.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BaGet
@@ -15,7 +16,6 @@ namespace BaGet
     {
         public static BaGetApplication AddAwsS3Storage(this BaGetApplication app)
         {
-            app.Services.AddLogging();
             app.Services.AddBaGetOptions<S3StorageOptions>(nameof(BaGetOptions.Storage));
             app.Services.AddTransient<S3StorageService>();
             app.Services.TryAddTransient<IStorageService>(provider => provider.GetRequiredService<S3StorageService>());
