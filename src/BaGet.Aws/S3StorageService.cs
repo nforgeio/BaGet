@@ -84,112 +84,84 @@ namespace BaGet.Aws
 
         public async Task<StoragePutResult> PutAsync(string path, Stream content, string contentType, CancellationToken cancellationToken = default)
         {
-            using (var tempFile = new TempFile())
-            {
-                using (var tempStream = System.IO.File.Create(tempFile.Name))
+                var metadata = new MetadataCollection();
+                var key = PrepareKey(path);
+
+                // Create list to store upload part responses.
+                var uploadResponses = new List<UploadPartResponse>();
+
+                // Setup information required to initiate the multipart upload.
+                var initiateRequest = new InitiateMultipartUploadRequest
                 {
-                    await content.CopyToAsync(tempStream, 4096, cancellationToken);
+                    BucketName = _bucket,
+                    Key = key
+                };
 
-                    tempStream.Seek(0, SeekOrigin.Begin);
+                // Initiate the upload.
+                var initResponse =
+                    await _client.InitiateMultipartUploadAsync(initiateRequest);
 
-                    var metadata = new MetadataCollection();
-                    var key = PrepareKey(path);
+                // Upload parts.
+                var contentLength = content.Length;
+                var partSize = 5 * (long)Math.Pow(2, 20); // 5 MB
 
-                    // Create list to store upload part responses.
-                    var uploadResponses = new List<UploadPartResponse>();
+                try
+                {
+                    _logger.LogInformation("Uploading parts");
 
-                    // Setup information required to initiate the multipart upload.
-                    var initiateRequest = new InitiateMultipartUploadRequest
+                    long filePosition = 0;
+                    for (var i = 1; filePosition < contentLength; i++)
+                    {
+                        var uploadRequest = new UploadPartRequest
+                        {
+                            BucketName = _bucket,
+                            Key = key,
+                            UploadId = initResponse.UploadId,
+                            PartNumber = i,
+                            PartSize = partSize,
+                            InputStream = content
+                        };
+
+                        // Track upload progress.
+                        uploadRequest.StreamTransferProgress +=
+                            new EventHandler<StreamTransferProgressArgs>(UploadPartProgressEventCallback);
+
+                        // Upload a part and add the response to our list.
+                        uploadResponses.Add(await _client.UploadPartAsync(uploadRequest));
+
+                        filePosition += partSize;
+                    }
+
+                    // Setup to complete the upload.
+                    var completeRequest = new CompleteMultipartUploadRequest
                     {
                         BucketName = _bucket,
-                        Key = key
+                        Key = key,
+                        UploadId = initResponse.UploadId
                     };
+                    completeRequest.AddPartETags(uploadResponses);
 
-                    // Initiate the upload.
-                    var initResponse =
-                        await _client.InitiateMultipartUploadAsync(initiateRequest);
+                    // Complete the upload.
+                    var completeUploadResponse =
+                        await _client.CompleteMultipartUploadAsync(completeRequest);
 
-                    // Upload parts.
-                    var contentLength = tempStream.Length;
-                    var partSize = 5 * (long)Math.Pow(2, 20); // 5 MB
-
-                    try
-                    {
-                        _logger.LogDebug("Uploading parts");
-
-                        long filePosition = 0;
-                        for (var i = 1; filePosition < contentLength; i++)
-                        {
-                            var uploadRequest = new UploadPartRequest
-                            {
-                                BucketName = _bucket,
-                                Key = key,
-                                UploadId = initResponse.UploadId,
-                                PartNumber = i,
-                                PartSize = partSize,
-                                InputStream = tempStream
-                            };
-
-                            // Track upload progress.
-                            uploadRequest.StreamTransferProgress +=
-                                new EventHandler<StreamTransferProgressArgs>(UploadPartProgressEventCallback);
-
-                            // Upload a part and add the response to our list.
-                            uploadResponses.Add(await _client.UploadPartAsync(uploadRequest));
-
-                            filePosition += partSize;
-                        }
-
-                        // Setup to complete the upload.
-                        var completeRequest = new CompleteMultipartUploadRequest
-                        {
-                            BucketName = _bucket,
-                            Key = key,
-                            UploadId = initResponse.UploadId
-                        };
-                        completeRequest.AddPartETags(uploadResponses);
-
-                        // Complete the upload.
-                        var completeUploadResponse =
-                            await _client.CompleteMultipartUploadAsync(completeRequest);
-
-                        return StoragePutResult.Success;
-                    }
-                    catch (Exception exception)
-                    {
-                        _logger.LogError("An AmazonS3Exception was thrown: { 0}", exception.Message);
-
-                        // Abort the upload.
-                        var abortMPURequest = new AbortMultipartUploadRequest
-                        {
-                            BucketName = _bucket,
-                            Key = key,
-                            UploadId = initResponse.UploadId
-                        };
-                        await _client.AbortMultipartUploadAsync(abortMPURequest);
-
-                        throw;
-                    }
-
-                    //var request = new PutObjectRequest
-                    //{
-                    //    BucketName = _bucket,
-                    //    Key = PrepareKey(path),
-                    //    InputStream = tempStream,
-                    //    ContentType = contentType,
-                    //    AutoResetStreamPosition = false,
-                    //    AutoCloseStream = false
-                    //};
-
-                    //var result = await _client.PutObjectAsync(request);
-
-                    //if (result.HttpStatusCode != HttpStatusCode.OK)
-                    //{
-                    //    throw new Exception(result.HttpStatusCode.ToString());
-                    //}
-
+                    return StoragePutResult.Success;
                 }
-            }
+                catch (Exception exception)
+                {
+                    _logger.LogError("An AmazonS3Exception was thrown: { 0}", exception.Message);
+
+                    // Abort the upload.
+                    var abortMPURequest = new AbortMultipartUploadRequest
+                    {
+                        BucketName = _bucket,
+                        Key = key,
+                        UploadId = initResponse.UploadId
+                    };
+                    await _client.AbortMultipartUploadAsync(abortMPURequest);
+
+                    throw;
+                }
         }
 
         public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
