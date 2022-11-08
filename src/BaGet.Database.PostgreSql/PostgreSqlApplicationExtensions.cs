@@ -18,7 +18,7 @@ namespace BaGet
                 options.UseNpgsql(databaseOptions.Value.ConnectionString,
                     b =>
                     {
-                        b.CommandTimeout(int.MaxValue);
+                        b.CommandTimeout(300);
                         b.EnableRetryOnFailure(3);
                     });
             });
