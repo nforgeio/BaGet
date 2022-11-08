@@ -21,7 +21,7 @@ namespace BaGet.Core
         {
             try
             {
-                _context.Packages.Add(package);
+                await _context.Packages.AddAsync(package, cancellationToken);
 
                 await _context.SaveChangesAsync(cancellationToken);
 
