@@ -161,7 +161,7 @@ namespace BaGet.Aws
                     await _client.AbortMultipartUploadAsync(abortMPURequest);
 
                     throw;
-                }
+            }
         }
 
         public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)

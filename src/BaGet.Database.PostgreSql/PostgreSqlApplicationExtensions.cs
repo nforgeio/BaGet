@@ -15,7 +15,12 @@ namespace BaGet
             {
                 var databaseOptions = provider.GetRequiredService<IOptionsSnapshot<DatabaseOptions>>();
 
-                options.UseNpgsql(databaseOptions.Value.ConnectionString);
+                options.UseNpgsql(databaseOptions.Value.ConnectionString,
+                    b =>
+                    {
+                        b.CommandTimeout(0);
+                        b.EnableRetryOnFailure(3);
+                    });
             });
 
             return app;
